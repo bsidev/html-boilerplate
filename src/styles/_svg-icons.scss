@@ -1,0 +1,11 @@
+$svg-icons-user: (
+    '../images/icons-sprite.svg',
+    round(26px * 1000) / 1000,
+    round(26px * 1000) / 1000,
+    round((0px - (30px - 26px) / 2) * 1000) / 1000,
+    round((0px - (30px - 26px) / 2) * 1000) / 1000
+);
+
+$svg-icons: (
+    user: $svg-icons-user,
+);

@@ -1,0 +1,15 @@
+{{#shapes}}
+$svg-{{commonName}}-{{base}}: (
+    '../images/{{commonName}}-sprite.svg',
+    round({{width.inner}}px * 1000) / 1000,
+    round({{height.inner}}px * 1000) / 1000,
+    round(({{position.absolute.x}}px - ({{width.outer}}px - {{width.inner}}px) / 2) * 1000) / 1000,
+    round(({{position.absolute.y}}px - ({{height.outer}}px - {{height.inner}}px) / 2) * 1000) / 1000
+);
+
+{{/shapes}}
+$svg-{{commonName}}: (
+{{#shapes}}
+    {{name}}: $svg-{{commonName}}-{{base}},
+{{/shapes}}
+);

@@ -1,0 +1,42 @@
+@mixin sprite-width($sprite) {
+    width: nth($sprite, 2);
+}
+
+@mixin sprite-height($sprite) {
+    height: nth($sprite, 3);
+}
+
+@mixin sprite-position($sprite) {
+    $sprite-offset-x: nth($sprite, 4);
+    $sprite-offset-y: nth($sprite, 5);
+    background-position: $sprite-offset-x $sprite-offset-y;
+}
+
+@mixin sprite-image($sprite) {
+    $sprite-image: nth($sprite, 1);
+    background-image: url(#{$sprite-image});
+}
+
+@mixin sprite($sprite) {
+    $sprite-image: nth($sprite, 1);
+    $sprite-offset-x: nth($sprite, 4);
+    $sprite-offset-y: nth($sprite, 5);
+    width: nth($sprite, 2);
+    height: nth($sprite, 3);
+    background: url(#{$sprite-image}) $sprite-offset-x $sprite-offset-y no-repeat;
+}
+
+@mixin placeholder {
+    &::-webkit-input-placeholder {
+        @content;
+    }
+    &:-moz-placeholder {
+        @content;
+    }
+    &::-moz-placeholder {
+        @content;
+    }
+    &:-ms-input-placeholder {
+        @content;
+    }
+}

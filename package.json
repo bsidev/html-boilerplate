@@ -1,0 +1,65 @@
+{
+  "scripts": {
+    "start": "NODE_ENV=development gulp start",
+    "dev": "NODE_ENV=development gulp build",
+    "prod": "NODE_ENV=production gulp build"
+  },
+  "dependencies": {
+    "jquery": "^3.5.1",
+    "normalize.css": "^8.0.1",
+    "svg4everybody": "^2.1.9"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
+    "@babel/register": "^7.11.5",
+    "autoprefixer": "^10.0.1",
+    "babel-loader": "^8.1.0",
+    "browser-sync": "^2.26.12",
+    "cache-loader": "^4.1.0",
+    "css-loader": "^4.3.0",
+    "cssnano": "^4.1.10",
+    "del": "^6.0.0",
+    "file-loader": "^6.1.0",
+    "gulp": "^4.0.2",
+    "gulp-beautify": "^3.0.0",
+    "gulp-filter": "^6.0.0",
+    "gulp-group-css-media-queries": "^1.2.2",
+    "gulp-hb": "^8.0.0",
+    "gulp-if": "^3.0.0",
+    "gulp-imagemin": "^7.1.0",
+    "gulp-media-queries-splitter": "^1.0.3",
+    "gulp-plumber": "^1.2.1",
+    "gulp-rename": "^2.0.0",
+    "gulp-svg-sprite": "^1.5.0",
+    "gulp-svgmin": "^3.0.0",
+    "gulp-svgstore": "^7.0.1",
+    "handlebars-helpers": "^0.10.0",
+    "handlebars-layouts": "^3.1.4",
+    "imagemin-webpack-plugin": "^2.4.2",
+    "media-query-plugin": "^1.4.0",
+    "media-query-splitting-plugin": "^1.1.17",
+    "mini-css-extract-plugin": "^0.11.3",
+    "node-sass": "^4.14.1",
+    "node-sass-glob-importer": "^5.3.2",
+    "optimize-css-assets-webpack-plugin": "^5.0.4",
+    "postcss": "^8.1.1",
+    "postcss-loader": "^4.0.3",
+    "sass-loader": "^10.0.2",
+    "thread-loader": "^3.0.0",
+    "vinyl-named": "^1.1.0",
+    "webpack-stream": "^6.1.0"
+  },
+  "license": "proprietary",
+  "private": true,
+  "babel": {
+    "presets": [
+      "@babel/env"
+    ]
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
