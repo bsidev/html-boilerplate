@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "start": "NODE_ENV=development gulp start",
-    "dev": "NODE_ENV=development gulp build",
-    "prod": "NODE_ENV=production gulp build"
+    "start": "gulp start",
+    "dev": "gulp build",
+    "prod": "gulp build --production"
   },
   "dependencies": {
     "jquery": "^3.5.1",
@@ -45,10 +45,12 @@
     "optimize-css-assets-webpack-plugin": "^5.0.4",
     "postcss": "^8.1.1",
     "postcss-loader": "^4.0.3",
+    "resolve-url-loader": "^3.1.1",
     "sass-loader": "^10.0.2",
     "thread-loader": "^3.0.0",
     "vinyl-named": "^1.1.0",
-    "webpack-stream": "^6.1.0"
+    "webpack-stream": "^6.1.0",
+    "yargs": "^16.0.3"
   },
   "license": "proprietary",
   "private": true,

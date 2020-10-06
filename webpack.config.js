@@ -1,5 +1,6 @@
 const path = require('path');
 const cssnano = require('cssnano');
+const { argv } = require('yargs');
 const globImporter = require('node-sass-glob-importer');
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -7,6 +8,8 @@ const ImageminPlugin = require('imagemin-webpack-plugin').default;
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const cacheDir = path.resolve(__dirname, '..', 'node_modules', '.cache');
+
+const isProd = !!argv.production;
 
 const getThreadLoader = name => ({
     loader: 'thread-loader',
@@ -18,7 +21,7 @@ const getThreadLoader = name => ({
 });
 
 const webpackConfig = {
-    mode: process.env.NODE_ENV,
+    mode: isProd ? 'production' : 'development',
     output: {
         filename: 'js/[name].js'
     },
@@ -49,6 +52,7 @@ const webpackConfig = {
                     MiniCssExtractPlugin.loader,
                     'css-loader',
                     'postcss-loader',
+                    'resolve-url-loader',
                     {
                         loader: 'sass-loader',
                         options: {
@@ -104,7 +108,7 @@ const webpackConfig = {
     ]
 };
 
-if (process.env.NODE_ENV === 'production') {
+if (isProd) {
     // noinspection JSCheckFunctionSignatures
     webpackConfig.plugins.push(...[
         new OptimizeCssAssetsPlugin({

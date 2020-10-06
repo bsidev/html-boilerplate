@@ -4,3 +4,7 @@
 @import "svg-icons";
 
 @import "~normalize.css/normalize.css";
+
+body:before {
+    @include sprite($svg-icons-arrow-link)
+}

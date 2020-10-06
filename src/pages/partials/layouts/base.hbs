@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="compensate-for-scrollbar">
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>{{ title }}</title>
     {{#if @global.publicPath }}
         <base href="{{ @global.publicPath }}">
     {{/if}}
-    {{#block "head"}}
+    {{#block "styles"}}
         <link rel="stylesheet" href="css/vendor.css" />
         <link rel="stylesheet" href="css/main.css" />
         <link rel="stylesheet" href="css/media.css" media="(max-width: 1024px)" />

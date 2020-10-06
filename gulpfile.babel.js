@@ -13,11 +13,13 @@ import filter from 'gulp-filter';
 import svgMin from 'gulp-svgmin';
 import svgStore from 'gulp-svgstore';
 import svgSprite from 'gulp-svg-sprite';
+import imagemin from 'gulp-imagemin';
 import browserSync from 'browser-sync';
+import { argv } from 'yargs';
 
 import config from './config';
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = !!argv.production;
 const isDev = !isProd;
 const inputDir = config.inputDir;
 const outputDir = config.outputDir;
@@ -27,7 +29,7 @@ const clean = () => del([config.outputDir]);
 const webpack = () => {
     const cssFilter = filter(['css/main.css'], { restore: true });
 
-    return gulp.src(['src/js/main.js', 'src/styles/main.scss'])
+    return gulp.src([`./${inputDir}/js/main.js`, `./${inputDir}/styles/main.scss`])
         .pipe(plumber())
         .pipe(named())
         .pipe(webpackStream(require('./webpack.config.js')))
@@ -69,15 +71,8 @@ const svgSymbols = () => gulp.src(`./${inputDir}/icons/symbols/**/*.svg`)
     .pipe(filter(file => file.stat && file.stat.size))
     .pipe(svgMin({
         plugins: [
-            {
-                cleanupIDs: {
-                    prefix: 'icon-',
-                    minify: true
-                }
-            },
-            {
-                removeAttrs: { attrs: 'fill' }
-            }
+            { cleanupIDs: { minify: true } },
+            { removeAttrs: { attrs: 'fill' } }
         ]
     }))
     .pipe(svgStore())
@@ -102,15 +97,23 @@ const svgSprites = () => gulp.src(`./${inputDir}/icons/sprites/**/*.svg`)
                 bust: false,
                 render: {
                     scss: {
-                        dest: '../styles/_svg-icons.scss',
-                        template: './src/icons/sprites/svg-template.hbs'
+                        dest: `../styles/_svg-icons.scss`,
+                        template: `./${inputDir}/icons/sprites/svg-template.hbs`
                     }
                 },
                 common: 'icons'
             }
         }
     }))
-    .pipe(gulp.dest(`./src/images/`))
+    .pipe(gulp.dest(`./${inputDir}/images/`))
+    .pipe(gulpIf(isDev, browserSync.stream()));
+
+const copyImages = () => gulp.src([`./${inputDir}/images/**/*`, `!./${inputDir}/images/icons-*.svg`])
+    .pipe(gulpIf(isProd, imagemin({
+        progressive: true,
+        interlaced: true
+    })))
+    .pipe(gulp.dest(`./${outputDir}/images/`))
     .pipe(gulpIf(isDev, browserSync.stream()));
 
 const copyStatic = () => gulp.src(`./${inputDir}/static/**/*`)
@@ -130,9 +133,14 @@ const watch = () => {
     gulp.watch(`./${inputDir}/pages/**/*`).on('all', buildPages);
     gulp.watch(`./${inputDir}/icons/sprites/**/*`).on('all', svgSprites);
     gulp.watch(`./${inputDir}/icons/symbols/**/*`).on('all', svgSymbols);
+    gulp.watch([`./${inputDir}/images/**/*`, `!./${inputDir}/images/icons-*.svg`]).on('all', copyImages);
     gulp.watch(`./${inputDir}/static/**/*`).on('all', copyStatic);
 };
 
-export const build = gulp.series(clean, svgSprites, gulp.parallel(webpack, buildPages, svgSymbols, copyStatic));
+export const build = gulp.series(
+    clean,
+    svgSprites,
+    gulp.parallel(webpack, buildPages, svgSymbols, copyImages, copyStatic)
+);
 
 export const start = gulp.series(build, gulp.parallel(devServer, watch));

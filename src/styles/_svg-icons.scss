@@ -1,11 +1,11 @@
-$svg-icons-user: (
+$svg-icons-arrow-link: (
     '../images/icons-sprite.svg',
-    round(26px * 1000) / 1000,
-    round(26px * 1000) / 1000,
-    round((0px - (30px - 26px) / 2) * 1000) / 1000,
-    round((0px - (30px - 26px) / 2) * 1000) / 1000
+    round(7px * 1000) / 1000,
+    round(11px * 1000) / 1000,
+    round((0px - (11px - 7px) / 2) * 1000) / 1000,
+    round((0px - (15px - 11px) / 2) * 1000) / 1000
 );
 
 $svg-icons: (
-    user: $svg-icons-user,
+    arrow-link: $svg-icons-arrow-link,
 );
