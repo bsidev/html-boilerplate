@@ -45,8 +45,8 @@
     "optimize-css-assets-webpack-plugin": "^5.0.4",
     "postcss": "^8.1.1",
     "postcss-loader": "^4.0.3",
-    "resolve-url-loader": "^3.1.1",
     "sass-loader": "^10.0.2",
+    "terser-webpack-plugin": "^4.2.2",
     "thread-loader": "^3.0.0",
     "vinyl-named": "^1.1.0",
     "webpack-stream": "^6.1.0",
@@ -60,8 +60,9 @@
     ]
   },
   "browserslist": [
-    "> 1%",
+    "> 0.5%",
     "last 2 versions",
+    "Firefox ESR",
     "not dead"
   ]
 }

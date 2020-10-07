@@ -6,8 +6,9 @@ const globImporter = require('node-sass-glob-importer');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ImageminPlugin = require('imagemin-webpack-plugin').default;
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
-const cacheDir = path.resolve(__dirname, '..', 'node_modules', '.cache');
+const cacheDir = path.resolve(__dirname, 'node_modules', '.cache', 'cache-loader');
 
 const isProd = !!argv.production;
 
@@ -47,12 +48,31 @@ const webpackConfig = {
                 ]
             },
             {
+                test: /\.css$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'cache-loader',
+                        options: {
+                            cacheDirectory: path.resolve(cacheDir, 'css')
+                        }
+                    },
+                    'css-loader',
+                    'postcss-loader'
+                ]
+            },
+            {
                 test: /\.s[ac]ss$/,
                 use: [
                     MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'cache-loader',
+                        options: {
+                            cacheDirectory: path.resolve(cacheDir, 'scss')
+                        }
+                    },
                     'css-loader',
                     'postcss-loader',
-                    'resolve-url-loader',
                     {
                         loader: 'sass-loader',
                         options: {
@@ -90,6 +110,12 @@ const webpackConfig = {
         ]
     },
     optimization: {
+        minimizer: [
+            new TerserPlugin({
+                cache: true,
+                extractComments: false
+            })
+        ],
         splitChunks: {
             cacheGroups: {
                 commons: {
@@ -109,6 +135,7 @@ const webpackConfig = {
 };
 
 if (isProd) {
+    webpackConfig.optimization.minimize = true;
     // noinspection JSCheckFunctionSignatures
     webpackConfig.plugins.push(...[
         new OptimizeCssAssetsPlugin({
@@ -119,6 +146,8 @@ if (isProd) {
         }),
         new ImageminPlugin()
     ]);
+} else {
+    webpackConfig.devtool = 'cheap-eval-source-map';
 }
 
 module.exports = webpackConfig;
