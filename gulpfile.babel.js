@@ -14,8 +14,14 @@ import svgMin from 'gulp-svgmin';
 import svgStore from 'gulp-svgstore';
 import svgSprite from 'gulp-svg-sprite';
 import imagemin from 'gulp-imagemin';
+import tap from 'gulp-tap';
+import merge from 'merge-stream';
+import inject from 'gulp-inject';
 import browserSync from 'browser-sync';
 import { argv } from 'yargs';
+
+import fs from 'fs';
+import path from 'path';
 
 import config from './config';
 
@@ -27,35 +33,35 @@ const outputDir = config.outputDir;
 const clean = () => del([config.outputDir]);
 
 const webpack = () => {
-    const cssFilter = filter(['css/main.css'], { restore: true });
+    const mainCssFilter = filter(['css/main.css'], { restore: true });
 
     return gulp.src([`./${inputDir}/js/main.js`, `./${inputDir}/styles/main.scss`])
         .pipe(plumber())
         .pipe(named())
         .pipe(webpackStream(require('./webpack.config.js')))
-        .pipe(cssFilter)
+        .pipe(mainCssFilter)
         .pipe(mediaQueriesSplitter([
             { media: 'none', filename: 'css/main.css' },
             { media: { max: '99999px' }, filename: 'css/media.css' }
         ]))
         .pipe(gulpIf(isProd, groupCssMediaQueries()))
-        .pipe(cssFilter.restore)
+        .pipe(mainCssFilter.restore)
         .pipe(plumber.stop())
         .pipe(gulp.dest(`./${outputDir}/`))
         .pipe(gulpIf(isDev, browserSync.stream()));
 };
 
-const buildPages = () => gulp.src(`./${inputDir}/pages/*.hbs`)
+const buildPages = () => gulp.src(`./${inputDir}/*.hbs`)
     .pipe(plumber())
     .pipe(hb()
         // Partials
-        .partials(`./${inputDir}/pages/partials/**/*.hbs`)
+        .partials(`./${inputDir}/partials/**/*.hbs`)
         // Helpers
         .helpers(require('handlebars-helpers'))
         .helpers(require('handlebars-layouts'))
-        .helpers(`./${inputDir}/pages/helpers/**/*.js`)
+        .helpers(`./${inputDir}/helpers/**/*.js`)
         // Data
-        .data(`./${inputDir}/pages/data/**/*.{js,json}`)
+        .data(`./${inputDir}/data/**/*.{js,json}`)
         .data({
             publicPath: config.publicPath
         })
@@ -66,19 +72,21 @@ const buildPages = () => gulp.src(`./${inputDir}/pages/*.hbs`)
     .pipe(gulp.dest(`./${outputDir}`))
     .pipe(gulpIf(isDev, browserSync.stream()));
 
-const svgSymbols = () => gulp.src(`./${inputDir}/icons/symbols/**/*.svg`)
-    .pipe(plumber())
-    .pipe(filter(file => file.stat && file.stat.size))
-    .pipe(svgMin({
-        plugins: [
-            { cleanupIDs: { minify: true } },
-            { removeAttrs: { attrs: 'fill' } }
-        ]
-    }))
-    .pipe(svgStore())
-    .pipe(rename({ basename: 'icons-symbols' }))
-    .pipe(gulp.dest(`./${outputDir}/images/`))
-    .pipe(gulpIf(isDev, browserSync.stream()));
+const svgSymbols = () => {
+    return gulp.src(`./${inputDir}/icons/symbols/**/*.svg`)
+        .pipe(plumber())
+        .pipe(filter(file => file.stat && file.stat.size))
+        .pipe(svgMin({
+            plugins: [
+                { cleanupIDs: { minify: true } },
+                { removeAttrs: { attrs: 'fill' } }
+            ]
+        }))
+        .pipe(svgStore())
+        .pipe(rename({ basename: 'icons-symbols' }))
+        .pipe(gulp.dest(`./${outputDir}/images/`))
+        .pipe(gulpIf(isDev, browserSync.stream()));
+};
 
 const svgSprites = () => gulp.src(`./${inputDir}/icons/sprites/**/*.svg`)
     .pipe(plumber())
@@ -128,19 +136,76 @@ const devServer = () => browserSync.init({
     port: config.devServer.port
 });
 
-const watch = () => {
-    gulp.watch([`./${inputDir}/styles/**/*.scss`, `./${inputDir}/js/**/*.js`]).on('all', webpack);
-    gulp.watch(`./${inputDir}/pages/**/*`).on('all', buildPages);
-    gulp.watch(`./${inputDir}/icons/sprites/**/*`).on('all', svgSprites);
-    gulp.watch(`./${inputDir}/icons/symbols/**/*`).on('all', svgSymbols);
-    gulp.watch([`./${inputDir}/images/**/*`, `!./${inputDir}/images/icons-*.svg`]).on('all', copyImages);
-    gulp.watch(`./${inputDir}/static/**/*`).on('all', copyStatic);
+const meta = () => {
+    let meta = {
+        symbols: {},
+        sprites: {}
+    };
+
+    const icons = gulp.src(`./${inputDir}/icons/{sprites,symbols}/**/*.svg`, { read: false })
+        .pipe(tap(file => {
+            const parsed = path.parse(file.relative);
+            let key;
+            let group = 'common';
+            if (parsed.dir.indexOf(path.sep) >= 0) {
+                key = path.dirname(parsed.dir);
+                group = path.basename(parsed.dir);
+            } else {
+                key = parsed.dir;
+            }
+            if (typeof meta[key][group] === 'undefined') {
+                meta[key][group] = [];
+            }
+            meta[key][group].push(parsed.name);
+        }));
+
+    return merge(icons)
+        .on('end', () => {
+            fs.writeFileSync(config.metaPath, JSON.stringify(meta));
+        });
+};
+
+export const injectAssets = () => {
+    return gulp.src(`./${outputDir}/*.html`)
+        .pipe(inject(
+            gulp.src(`./${outputDir}/**/vendor*.{js,css}`, { read: false })
+                .pipe(gulp.src([
+                    `./${outputDir}/**/*.{js,css}`,
+                    `!./${outputDir}/**/vendor*.{js,css}`,
+                    `!./${outputDir}/css/media.css`
+                ], { read: false, passthrough: true }))
+                .pipe(gulp.src(`./${outputDir}/css/media.css`, { read: false, passthrough: true })),
+            {
+                relative: true,
+                transform: function(filepath) {
+                    if (path.basename(filepath) === 'media.css') {
+                        return `<link rel="stylesheet" href="${filepath}" media="all">`;
+                    }
+                    return inject.transform.apply(inject.transform, arguments);
+                }
+            }))
+        .pipe(gulp.dest(`./${outputDir}`));
 };
 
 export const build = gulp.series(
     clean,
     svgSprites,
-    gulp.parallel(webpack, buildPages, svgSymbols, copyImages, copyStatic)
+    gulp.parallel(webpack, buildPages, svgSymbols, copyImages, copyStatic),
+    injectAssets
 );
+
+const watch = () => {
+    gulp.watch([`./${inputDir}/styles/**/*.scss`, `./${inputDir}/js/**/*.js`]).on('all', webpack);
+    gulp.watch([
+        `./${inputDir}/data/**/*`,
+        `./${inputDir}/helpers/**/*`,
+        `./${inputDir}/partials/**/*`,
+        `./${inputDir}/*.hbs`
+    ]).on('all', buildPages);
+    gulp.watch(`./${inputDir}/icons/sprites/**/*`).on('all', gulp.parallel(svgSprites, meta));
+    gulp.watch(`./${inputDir}/icons/symbols/**/*`).on('all', gulp.parallel(svgSymbols, meta));
+    gulp.watch([`./${inputDir}/images/**/*`, `!./${inputDir}/images/icons-*.svg`]).on('all', copyImages);
+    gulp.watch(`./${inputDir}/static/**/*`).on('all', copyStatic);
+};
 
 export const start = gulp.series(build, gulp.parallel(devServer, watch));

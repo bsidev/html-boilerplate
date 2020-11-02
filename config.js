@@ -24,5 +24,6 @@ module.exports = {
         comma_first: false,
         e4x: false,
         indent_empty_lines: false
-    }
+    },
+    metaPath: 'src/data/meta.json'
 };

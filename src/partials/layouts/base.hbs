@@ -7,20 +7,15 @@
     {{#if @global.publicPath }}
         <base href="{{ @global.publicPath }}">
     {{/if}}
-    {{#block "styles"}}
-        <link rel="stylesheet" href="css/vendor.css" />
-        <link rel="stylesheet" href="css/main.css" />
-        <link rel="stylesheet" href="css/media.css" media="(max-width: 1024px)" />
-    {{/block}}
+    <!-- inject:css -->
+    <!-- endinject -->
 </head>
 <body>
 {{#block "header"}}{{/block}}
 {{#block "main"}}{{/block}}
 {{#block "footer"}}{{/block}}
 
-{{#block "scripts"}}
-    <script src="js/vendor.js"></script>
-    <script src="js/main.js"></script>
-{{/block}}
+<!-- inject:js -->
+<!-- endinject -->
 </body>
 </html>
