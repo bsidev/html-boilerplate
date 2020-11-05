@@ -174,7 +174,7 @@ export const injectAssets = () => {
                     `!./${outputDir}/**/vendor*.{js,css}`,
                     `!./${outputDir}/css/media.css`
                 ], { read: false, passthrough: true }))
-                .pipe(gulp.src(`./${outputDir}/css/media.css`, { read: false, passthrough: true })),
+                .pipe(gulp.src(`./${outputDir}/css/media.css`, { read: false, passthrough: true, allowEmpty: true })),
             {
                 relative: true,
                 transform: function(filepath) {
@@ -190,7 +190,8 @@ export const injectAssets = () => {
 export const build = gulp.series(
     clean,
     svgSprites,
-    gulp.parallel(webpack, buildPages, svgSymbols, copyImages, copyStatic),
+    gulp.parallel(webpack, meta, svgSymbols, copyImages, copyStatic),
+    buildPages,
     injectAssets
 );
 
@@ -201,7 +202,7 @@ const watch = () => {
         `./${inputDir}/helpers/**/*`,
         `./${inputDir}/partials/**/*`,
         `./${inputDir}/*.hbs`
-    ]).on('all', buildPages);
+    ]).on('all', gulp.series(buildPages, injectAssets));
     gulp.watch(`./${inputDir}/icons/sprites/**/*`).on('all', gulp.parallel(svgSprites, meta));
     gulp.watch(`./${inputDir}/icons/symbols/**/*`).on('all', gulp.parallel(svgSymbols, meta));
     gulp.watch([`./${inputDir}/images/**/*`, `!./${inputDir}/images/icons-*.svg`]).on('all', copyImages);
