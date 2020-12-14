@@ -25,5 +25,10 @@ module.exports = {
         e4x: false,
         indent_empty_lines: false
     },
-    metaPath: 'src/data/meta.json'
+    metaPath: 'src/data/meta.json',
+    breakpoints: {
+        mobile: 375,
+        tablet: 768,
+        desktop: 1250,
+    }
 };

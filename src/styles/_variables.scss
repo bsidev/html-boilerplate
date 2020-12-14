@@ -1,0 +1,6 @@
+// Vars loads by webpack
+$breakpoints: (
+    mobile: $breakpoint-mobile,
+    tablet: $breakpoint-tablet,
+    desktop: $breakpoint-desktop
+);

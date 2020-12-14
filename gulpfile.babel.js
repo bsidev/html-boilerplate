@@ -1,5 +1,6 @@
 import gulp from 'gulp';
 import del from 'del';
+import webpack from 'webpack';
 import webpackStream from 'webpack-stream';
 import named from 'vinyl-named';
 import hb from 'gulp-hb';
@@ -7,8 +8,6 @@ import plumber from 'gulp-plumber';
 import rename from 'gulp-rename';
 import beautify from 'gulp-beautify';
 import gulpIf from 'gulp-if';
-import mediaQueriesSplitter from 'gulp-media-queries-splitter';
-import groupCssMediaQueries from 'gulp-group-css-media-queries';
 import filter from 'gulp-filter';
 import svgMin from 'gulp-svgmin';
 import svgStore from 'gulp-svgstore';
@@ -32,20 +31,11 @@ const outputDir = config.outputDir;
 
 const clean = () => del([config.outputDir]);
 
-const webpack = () => {
-    const mainCssFilter = filter(['css/main.css'], { restore: true });
-
+const buildWebpack = () => {
     return gulp.src([`./${inputDir}/js/main.js`, `./${inputDir}/styles/main.scss`])
         .pipe(plumber())
         .pipe(named())
-        .pipe(webpackStream(require('./webpack.config.js')))
-        .pipe(mainCssFilter)
-        .pipe(mediaQueriesSplitter([
-            { media: 'none', filename: 'css/main.css' },
-            { media: { max: '99999px' }, filename: 'css/media.css' }
-        ]))
-        .pipe(gulpIf(isProd, groupCssMediaQueries()))
-        .pipe(mainCssFilter.restore)
+        .pipe(webpackStream(require('./webpack.config.js', webpack)))
         .pipe(plumber.stop())
         .pipe(gulp.dest(`./${outputDir}/`))
         .pipe(gulpIf(isDev, browserSync.stream()));
@@ -172,14 +162,26 @@ export const injectAssets = () => {
                 .pipe(gulp.src([
                     `./${outputDir}/**/*.{js,css}`,
                     `!./${outputDir}/**/vendor*.{js,css}`,
-                    `!./${outputDir}/css/media.css`
+                    `!./${outputDir}/css/main-*.css`
                 ], { read: false, passthrough: true }))
-                .pipe(gulp.src(`./${outputDir}/css/media.css`, { read: false, passthrough: true, allowEmpty: true })),
+                .pipe(gulp.src(`./${outputDir}/css/main-*.css`, { read: false, passthrough: true, allowEmpty: true })),
             {
                 relative: true,
                 transform: function(filepath) {
-                    if (path.basename(filepath) === 'media.css') {
-                        return `<link rel="stylesheet" href="${filepath}" media="all">`;
+                    const breakpoints = config.breakpoints || {};
+                    const sortableBreakpoints = Object.entries(breakpoints)
+                        .sort(([, a], [, b]) => a - b)
+                        .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+                    const breakpointValues = Object.values(sortableBreakpoints);
+                    const found = path.basename(filepath).match(/^main-(.+).css$/);
+                    if (found) {
+                        const breakpointName = found[1];
+                        const index = breakpointValues.findIndex(value => value === breakpoints[breakpointName]);
+                        const nextValue = index < breakpointValues.length - 1 ? breakpointValues[index + 1] : null;
+
+                        if (nextValue !== null) {
+                            return `<link rel="stylesheet" href="${filepath}" media="only screen and (max-width: ${nextValue - 1}px)">`;
+                        }
                     }
                     return inject.transform.apply(inject.transform, arguments);
                 }
@@ -190,13 +192,13 @@ export const injectAssets = () => {
 export const build = gulp.series(
     clean,
     svgSprites,
-    gulp.parallel(webpack, meta, svgSymbols, copyImages, copyStatic),
+    gulp.parallel(buildWebpack, meta, svgSymbols, copyImages, copyStatic),
     buildPages,
     injectAssets
 );
 
 const watch = () => {
-    gulp.watch([`./${inputDir}/styles/**/*.scss`, `./${inputDir}/js/**/*.js`]).on('all', webpack);
+    gulp.watch([`./${inputDir}/styles/**/*.scss`, `./${inputDir}/js/**/*.js`]).on('all', buildWebpack);
     gulp.watch([
         `./${inputDir}/data/**/*`,
         `./${inputDir}/helpers/**/*`,

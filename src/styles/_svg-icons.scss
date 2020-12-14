@@ -1,0 +1,20 @@
+$svg-icons-hand: (
+    '../images/icons-sprite.svg',
+    round(511px * 1000) / 1000,
+    round(512px * 1000) / 1000,
+    round((0px - (515px - 511px) / 2) * 1000) / 1000,
+    round((0px - (516px - 512px) / 2) * 1000) / 1000
+);
+
+$svg-icons-test--test2: (
+    '../images/icons-sprite.svg',
+    round(511px * 1000) / 1000,
+    round(512px * 1000) / 1000,
+    round((-515px - (515px - 511px) / 2) * 1000) / 1000,
+    round((0px - (516px - 512px) / 2) * 1000) / 1000
+);
+
+$svg-icons: (
+    hand: $svg-icons-hand,
+    test--test2: $svg-icons-test--test2,
+);
