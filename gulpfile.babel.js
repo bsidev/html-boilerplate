@@ -158,7 +158,8 @@ const meta = () => {
 export const injectAssets = () => {
     return gulp.src(`./${outputDir}/*.html`)
         .pipe(inject(
-            gulp.src(`./${outputDir}/**/vendor*.{js,css}`, { read: false })
+            gulp
+                .src(`./${outputDir}/**/vendor*.{js,css}`, { read: false })
                 .pipe(gulp.src([
                     `./${outputDir}/**/*.{js,css}`,
                     `!./${outputDir}/**/vendor*.{js,css}`,
@@ -168,6 +169,9 @@ export const injectAssets = () => {
             {
                 relative: true,
                 transform: function(filepath) {
+                    if (isDev) {
+                        arguments[0] = filepath + '?v=' + Date.now();
+                    }
                     const breakpoints = config.breakpoints || {};
                     const sortableBreakpoints = Object.entries(breakpoints)
                         .sort(([, a], [, b]) => a - b)
@@ -180,7 +184,8 @@ export const injectAssets = () => {
                         const nextValue = index < breakpointValues.length - 1 ? breakpointValues[index + 1] : null;
 
                         if (nextValue !== null) {
-                            return `<link rel="stylesheet" href="${filepath}" media="only screen and (max-width: ${nextValue - 1}px)">`;
+                            return `<link rel="stylesheet" href="${filepath}" media="only screen and (max-width: ${nextValue -
+                            1}px)">`;
                         }
                     }
                     return inject.transform.apply(inject.transform, arguments);
@@ -198,7 +203,12 @@ export const build = gulp.series(
 );
 
 const watch = () => {
-    gulp.watch([`./${inputDir}/styles/**/*.scss`, `./${inputDir}/js/**/*.js`]).on('all', buildWebpack);
+    gulp.watch([
+        `./${inputDir}/styles/**/*.scss`,
+        `./${inputDir}/partials/blocks/**/*.scss`,
+        `./${inputDir}/js/**/*.js`
+            `./${inputDir}/partials/blocks/**/*.js`
+    ]).on('all', buildWebpack);
     gulp.watch([
         `./${inputDir}/data/**/*`,
         `./${inputDir}/helpers/**/*`,
