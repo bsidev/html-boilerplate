@@ -169,8 +169,9 @@ export const injectAssets = () => {
             {
                 relative: true,
                 transform: function(filepath) {
+                    const ts = Date.now();
                     if (isDev) {
-                        arguments[0] = filepath + '?v=' + Date.now();
+                        arguments[0] = filepath + '?v=' + ts;
                     }
                     const breakpoints = config.breakpoints || {};
                     const sortableBreakpoints = Object.entries(breakpoints)
@@ -184,7 +185,7 @@ export const injectAssets = () => {
                         const nextValue = index < breakpointValues.length - 1 ? breakpointValues[index + 1] : null;
 
                         if (nextValue !== null) {
-                            return `<link rel="stylesheet" href="${filepath}" media="only screen and (max-width: ${nextValue -
+                            return `<link rel="stylesheet" href="${filepath}${isDev ? '?v=' + ts : ''}" media="only screen and (max-width: ${nextValue -
                             1}px)">`;
                         }
                     }
